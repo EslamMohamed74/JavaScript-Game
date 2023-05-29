@@ -14,7 +14,7 @@ window.addEventListener("load", function () {
 
   let score = 0;
   let gameOver = false;
-  ctx.font = "50px Impact";
+  ctx.font = "30px Impact";
 
   let timeToNextRaven = 0;
   let ravenInterval = 500;
