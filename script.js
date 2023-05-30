@@ -1,5 +1,21 @@
 /** @type {HTMLCanvasElement} */
 window.addEventListener("load", function () {
+  const startButton = document.getElementById("startButton");
+  const restartButton = document.getElementById("restartButton");
+  const container = document.getElementById("container");
+  const cursor = document.getElementById("cursor");
+  const nameInput = document.getElementById("name");
+  nameInput.value = localStorage.getItem("name");
+
+  const table = document.querySelector("#leaderboard");
+
+  document.addEventListener("mousemove", (e) => {
+    cursor.setAttribute(
+      "style",
+      `top: ${e.pageY - 35}px; left: ${e.pageX - 35}px;`
+    );
+  });
+
   let audio = document.getElementById("myAudio");
   let audio1 = document.getElementById("myAudio1");
   const canvas = document.getElementById("canvas1");
@@ -24,8 +40,8 @@ window.addEventListener("load", function () {
 
   class Raven {
     constructor() {
-      this.spriteWidth = 271;
-      this.spriteHeight = 194;
+      this.spriteWidth = 266;
+      this.spriteHeight = 188;
       this.sizeModifier = Math.random() * 0.6 + 0.4;
       this.width = this.spriteWidth * this.sizeModifier;
       this.height = this.spriteHeight * this.sizeModifier;
@@ -35,7 +51,7 @@ window.addEventListener("load", function () {
       this.directionY = Math.random() * 5 - 2.5;
       this.markedForDeletion = false;
       this.image = new Image();
-      this.image.src = "raven.png";
+      this.image.src = "enemy2.png";
       this.frame = 0;
       this.maxFrame = 4;
       this.timeSinceFlap = 0;
@@ -168,24 +184,34 @@ window.addEventListener("load", function () {
   }
 
   function drawGameOver() {
-    ctx.textAlign = "center";
-    ctx.fillStyle = "black";
-    ctx.fillText(
-      "GAME OVER, your score is  " + score,
-      canvas.width / 2,
-      canvas.height / 2
-    );
-    ctx.fillStyle = "WHITE";
-    ctx.fillText(
-      "GAME OVER, your score is  " + score,
-      canvas.width / 2 + 5,
-      canvas.height / 2
-    );
+    // ctx.textAlign = "center";
+    // ctx.fillStyle = "black";
+    // ctx.fillText(
+    //   "GAME OVER, your score is  " + score,
+    //   canvas.width / 2,
+    //   canvas.height / 2
+    // );
+    // ctx.fillStyle = "WHITE";
+    // ctx.fillText(
+    //   "GAME OVER, your score is  " + score,
+    //   canvas.width / 2 + 5,
+    //   canvas.height / 2
+    // );
+
+    postScore();
+    document.getElementById("startGame").style.display = "none";
+    document.getElementById(
+      "gameover"
+    ).innerHTML = `GAME OVER, your score is ${score}`;
+    document.getElementById("gameover").style.display = "block";
+    table.style.display = "table";
     audio.pause();
     audio1.play();
-    document.getElementById("container").style.display = "flex";
-    document.getElementById("startButton").style.display = "none";
-    document.getElementById("restartButton").style.display = "block";
+    container.style.display = "flex";
+    startButton.style.display = "none";
+    restartButton.style.display = "block";
+    cursor.classList.remove("show");
+    document.body.style.cursor = "auto";
   }
 
   window.addEventListener("click", function (e) {
@@ -212,6 +238,8 @@ window.addEventListener("load", function () {
   });
 
   function animate(timestamp) {
+    cursor.classList.add("show");
+    document.body.style.cursor = "none";
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     collisionCtx.clearRect(0, 0, canvas.width, canvas.height);
     let deltatime = timestamp - lastTime;
@@ -234,28 +262,98 @@ window.addEventListener("load", function () {
     else drawGameOver();
   }
 
-  document
-    .getElementById("startButton")
-    .addEventListener("click", function (e) {
-      document.getElementById("container").style.display = "none";
-      animate(0);
-      audio.play();
-    });
+  startButton.addEventListener("click", function (e) {
+    if (nameInput.value.length < 2) {
+      return false;
+    }
+    localStorage.setItem("name", nameInput.value);
+    container.style.display = "none";
+    nameInput.style.display = "none";
+    animate(0);
+    audio.play();
+  });
 
-  document
-    .getElementById("restartButton")
-    .addEventListener("click", function (e) {
-      document.getElementById("container").style.display = "none";
-      document.getElementById("startButton").style.display = "block";
-      timeToNextRaven = 0;
-      ravenInterval = 500;
-      lastTime = 0;
-      ravens = [];
-      explosions = [];
-      particles = [];
-      score = 0;
-      gameOver = false;
-      animate(0);
-      audio.play();
-    });
+  restartButton.addEventListener("click", function (e) {
+    container.style.display = "none";
+    startButton.style.display = "block";
+    // cursor.style.display = "none";
+    timeToNextRaven = 0;
+    ravenInterval = 500;
+    lastTime = 0;
+    ravens = [];
+    explosions = [];
+    particles = [];
+    score = 0;
+    gameOver = false;
+    animate(0);
+    audio.play();
+  });
+
+  let url =
+    "https://game-leaderboard-e4b54-default-rtdb.firebaseio.com/leaderboard.json";
+
+  const postScore = () => {
+    let data = {
+      name: nameInput.value,
+      score: score,
+    };
+
+    let options = {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    };
+
+    fetch(url, options)
+      .then((response) => response.json())
+      .then((data) => {
+        getScore();
+      })
+      .catch((error) => {
+        // Handle any errors
+        console.error(error);
+      });
+  };
+
+  const getScore = () => {
+    fetch(url)
+      .then((response) => response.json())
+      .then((data) => {
+        // Handle the response data
+        let scoreData = [];
+        for (let key in data) {
+          scoreData.push(data[key]);
+        }
+        let sortedScoreData = scoreData.sort((a, b) => b.score - a.score);
+
+        const tableBody = document.querySelector("#leaderboard tbody");
+        let stopLoop = false;
+        sortedScoreData.forEach((row, index) => {
+          if (stopLoop) return;
+          const newRow = document.createElement("tr");
+          const idCell = document.createElement("td");
+          const nameCell = document.createElement("td");
+          const scoreCell = document.createElement("td");
+
+          idCell.textContent = index + 1;
+          nameCell.textContent = row.name;
+          scoreCell.textContent = row.score;
+
+          newRow.appendChild(idCell);
+          newRow.appendChild(nameCell);
+          newRow.appendChild(scoreCell);
+
+          tableBody.appendChild(newRow);
+          if (index === 9) {
+            stopLoop = true;
+          }
+        });
+      })
+      .catch((error) => {
+        // Handle any errors
+        console.error(error);
+      });
+  };
 });

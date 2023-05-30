@@ -1,28 +1,41 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>JavaScript Game</title>
-    <link rel="stylesheet" href="style.css">
-</head>
+    <link rel="stylesheet" href="style.css" />
+  </head>
 
-<body>
+  <body>
     <div id="container">
-        <div><button id="startButton">Start Game</button></div>
-       <div> <button id="restartButton">Restart Game</button></div>
+      <p id="startGame">
+        Try to shoot bats before reaching the end of the screen
+      </p>
+      <p id="gameover"></p>
+      <table id="leaderboard" class="leaderboard-table">
+        <thead>
+          <th>Rank</th>
+          <th>Name</th>
+          <th>Score</th>
+        </thead>
+        <tbody>
+        </tbody>
+      </table>
+      <input type="text" id="name" placeholder="Enter Your Name" required />
+      <div><button id="startButton">Start Game</button></div>
+      <div><button id="restartButton">Restart Game</button></div>
     </div>
+    <div id="cursor"></div>
     <canvas id="collisionCanvas"></canvas>
     <canvas id="canvas1"></canvas>
-    <audio id="myAudio" autoplay loop>
-        <source src="Whispers.ogg" type="audio/mp3">
+    <audio id="myAudio" loop>
+      <source src="Whispers.ogg" type="audio/mp3" />
     </audio>
     <audio id="myAudio1">
-        <source src="gameover.mp3" type="audio/mp3">
+      <source src="gameover.mp3" type="audio/mp3" />
     </audio>
     <script src="script.js"></script>
-</body>
-
+  </body>
 </html>
